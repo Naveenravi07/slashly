@@ -5,7 +5,12 @@
     "dev": "nodemon --exec ts-node src/main.ts"
   },
   "dependencies": {
-    "fastify": "^5.8.2"
+    "@prisma/client": "^7.4.2",
+    "dotenv": "^17.3.1",
+    "fastify": "^5.8.2",
+    "fastify-plugin": "^5.1.0",
+    "nanoid": "^5.1.6",
+    "prisma": "^7.4.2"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",
