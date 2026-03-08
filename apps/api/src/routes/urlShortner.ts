@@ -1,5 +1,8 @@
 import { FastifyPluginAsync } from 'fastify';
 import { encodeBase62, decodeBase62 } from '../utils/base62';
+import dotenv from "dotenv"
+
+dotenv.config({})
 
 const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
 
@@ -9,7 +12,6 @@ const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
     if (!url) {
       return reply.code(400).send({ error: 'URL is required' });
     }
-
     const urlRecord = await server.prisma.url.create({
       data: {
         original_url: url,
@@ -24,11 +26,11 @@ const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
       data: { slug },
     });
 
-    return { slug, short_url: `${request.protocol}://${request.hostname}/${slug}` };
+    return { slug, short_url: `${process.env.SERVER_URL}/s/${slug}` };
   });
 
 
-  server.get('/:slug', async (request, reply) => {
+  server.get('/s/:slug', async (request, reply) => {
     const { slug } = request.params as { slug: string };
 
     const urlRecord = await server.prisma.url.findUnique({
