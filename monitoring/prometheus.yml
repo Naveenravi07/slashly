@@ -1,0 +1,37 @@
+# Prometheus configuration file
+# This tells Prometheus where to scrape metrics from
+
+global:
+  scrape_interval: 15s  # How often to collect metrics
+  evaluation_interval: 15s  # How often to evaluate rules
+
+# What services to monitor
+scrape_configs:
+  # Monitor Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitor our API instances
+  - job_name: 'slashly-api'
+    # Docker DNS will resolve 'api' to all replicas
+    dns_sd_configs:
+      - names:
+          - 'tasks.api'  # Docker Swarm service discovery
+        type: 'A'
+        port: 8080
+    # Fallback to static config for docker-compose
+    static_configs:
+      - targets: ['api:8080']
+    metrics_path: '/metrics'  # Where our API exposes metrics
+    scrape_interval: 10s
+
+  # Monitor Nginx
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+
+  # Monitor PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
