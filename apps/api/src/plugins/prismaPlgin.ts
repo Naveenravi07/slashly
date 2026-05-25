@@ -7,30 +7,47 @@ import pg from 'pg'
 declare module 'fastify' {
   interface FastifyInstance {
     prisma: PrismaClient
+    prismaRead: PrismaClient
   }
 }
 
 const prismaPlugin: FastifyPluginAsync = fp(async (server) => {
   const connectionString = process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/slashly'
+  const readReplicaUrl = process.env.DATABASE_READ_REPLICA_URL || connectionString
   
-  console.log('Connecting to database with:', connectionString)
+  console.log('Connecting to primary database:', connectionString)
+  console.log('Connecting to read replica:', readReplicaUrl)
   
-  const pool = new pg.Pool({ 
+  // Primary database connection (for writes)
+  const primaryPool = new pg.Pool({ 
     connectionString,
   })
   
-  const adapter = new PrismaPg(pool)
-  const prisma = new PrismaClient({ adapter })
+  const primaryAdapter = new PrismaPg(primaryPool)
+  const prisma = new PrismaClient({ adapter: primaryAdapter })
 
   await prisma.$connect()
+  console.log('Primary Prisma connected successfully')
+
+  // Read replica connection (for reads)
+  const readPool = new pg.Pool({ 
+    connectionString: readReplicaUrl,
+  })
   
-  console.log('Prisma connected successfully')
+  const readAdapter = new PrismaPg(readPool)
+  const prismaRead = new PrismaClient({ adapter: readAdapter })
+
+  await prismaRead.$connect()
+  console.log('Read replica Prisma connected successfully')
 
   server.decorate('prisma', prisma)
+  server.decorate('prismaRead', prismaRead)
 
   server.addHook('onClose', async (server) => {
     await server.prisma.$disconnect()
-    await pool.end()
+    await server.prismaRead.$disconnect()
+    await primaryPool.end()
+    await readPool.end()
   })
 })
 

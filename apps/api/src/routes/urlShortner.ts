@@ -10,10 +10,58 @@ const SlugParamsSchema = Type.Object({
   slug: Type.String({ minLength: 1 })
 });
 
+const ListQuerySchema = Type.Object({
+  limit: Type.Optional(Type.Number({ minimum: 1, maximum: 100, default: 10 })),
+  offset: Type.Optional(Type.Number({ minimum: 0, default: 0 }))
+});
+
 type ShortenBody = Static<typeof ShortenBodySchema>;
 type SlugParams = Static<typeof SlugParamsSchema>;
+type ListQuery = Static<typeof ListQuerySchema>;
 
 const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
+  server.get<{ Querystring: ListQuery }>('/urls', {
+    schema: {
+      tags: ['url'],
+      description: 'List all shortened URLs with pagination',
+      querystring: ListQuerySchema,
+      response: {
+        200: Type.Object({
+          urls: Type.Array(Type.Object({
+            slug: Type.String(),
+            original_url: Type.String(),
+            created_at: Type.String({ format: 'date-time' })
+          })),
+          total: Type.Number(),
+          limit: Type.Number(),
+          offset: Type.Number()
+        })
+      }
+    }
+  }, async (request, reply) => {
+    const { limit = 10, offset = 0 } = request.query;
+
+    const [urls, total] = await Promise.all([
+      server.prismaRead.url.findMany({
+        take: limit,
+        skip: offset,
+        orderBy: { created_at: 'desc' }
+      }),
+      server.prismaRead.url.count()
+    ]);
+
+    return {
+      urls: urls.map(url => ({
+        slug: url.slug,
+        original_url: url.original_url,
+        created_at: url.created_at.toISOString()
+      })),
+      total,
+      limit,
+      offset
+    };
+  });
+
   server.post<{ Body: ShortenBody }>('/shorten', {
     schema: {
       tags: ['url'],
@@ -66,7 +114,7 @@ const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
   }, async (request, reply) => {
     const { slug } = request.params;
 
-    const urlRecord = await server.prisma.url.findUnique({
+    const urlRecord = await server.prismaRead.url.findUnique({
       where: { slug },
     });
 
@@ -99,7 +147,7 @@ const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
   }, async (request, reply) => {
     const { slug } = request.params;
 
-    const urlRecord = await server.prisma.url.findUnique({
+    const urlRecord = await server.prismaRead.url.findUnique({
       where: { slug },
     });
 
