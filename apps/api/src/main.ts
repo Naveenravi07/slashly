@@ -1,13 +1,21 @@
 import fastify from 'fastify'
+import cors from '@fastify/cors'
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 import prismaPlugin from './plugins/prismaPlgin'
 import metricsPlugin from './plugins/metricsPlugin'
+import messageQueuePlugin from './plugins/messageQueuePlugin'
 import urlShortenerRoutes from './routes/urlShortner'
 
 const server = fastify()
 
-// Register metrics plugin first
+// Register CORS first
+server.register(cors, {
+  origin: true, // Allow all origins in development, configure for production
+  credentials: true
+})
+
+// Register metrics plugin
 server.register(metricsPlugin)
 
 server.register(swagger, {
@@ -24,7 +32,8 @@ server.register(swagger, {
       }
     ],
     tags: [
-      { name: 'url', description: 'URL shortening endpoints' }
+      { name: 'url', description: 'URL shortening endpoints' },
+      { name: 'analytics', description: 'Analytics endpoints' }
     ]
   }
 })
@@ -42,6 +51,7 @@ server.get('/ping', async () => {
 })
 
 server.register(prismaPlugin)
+server.register(messageQueuePlugin)
 server.register(urlShortenerRoutes)
 
 server.listen({ port: 8080, host: '0.0.0.0' }, (err, address) => {

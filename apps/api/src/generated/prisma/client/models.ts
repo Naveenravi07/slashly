@@ -9,4 +9,5 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Url'
+export type * from './models/UrlAnalytics'
 export type * from './commonInputTypes'

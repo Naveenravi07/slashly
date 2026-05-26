@@ -51,7 +51,8 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  Url: 'Url'
+  Url: 'Url',
+  UrlAnalytics: 'UrlAnalytics'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -80,6 +81,23 @@ export const UrlScalarFieldEnum = {
 export type UrlScalarFieldEnum = (typeof UrlScalarFieldEnum)[keyof typeof UrlScalarFieldEnum]
 
 
+export const UrlAnalyticsScalarFieldEnum = {
+  id: 'id',
+  url_id: 'url_id',
+  ip_address: 'ip_address',
+  user_agent: 'user_agent',
+  referer: 'referer',
+  country: 'country',
+  city: 'city',
+  device_type: 'device_type',
+  browser: 'browser',
+  os: 'os',
+  clicked_at: 'clicked_at'
+} as const
+
+export type UrlAnalyticsScalarFieldEnum = (typeof UrlAnalyticsScalarFieldEnum)[keyof typeof UrlAnalyticsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -94,4 +112,12 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

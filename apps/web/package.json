@@ -1,0 +1,20 @@
+{
+  "name": "slashly-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "nuxt": "^3.11.2",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^1.1.5",
+    "@nuxtjs/tailwindcss": "^6.12.0"
+  }
+}

@@ -384,7 +384,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  Url: 'Url'
+  Url: 'Url',
+  UrlAnalytics: 'UrlAnalytics'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -400,7 +401,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "url"
+    modelProps: "url" | "urlAnalytics"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -478,6 +479,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UrlAnalytics: {
+      payload: Prisma.$UrlAnalyticsPayload<ExtArgs>
+      fields: Prisma.UrlAnalyticsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UrlAnalyticsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UrlAnalyticsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>
+        }
+        findFirst: {
+          args: Prisma.UrlAnalyticsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UrlAnalyticsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>
+        }
+        findMany: {
+          args: Prisma.UrlAnalyticsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>[]
+        }
+        create: {
+          args: Prisma.UrlAnalyticsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>
+        }
+        createMany: {
+          args: Prisma.UrlAnalyticsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UrlAnalyticsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>[]
+        }
+        delete: {
+          args: Prisma.UrlAnalyticsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>
+        }
+        update: {
+          args: Prisma.UrlAnalyticsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>
+        }
+        deleteMany: {
+          args: Prisma.UrlAnalyticsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UrlAnalyticsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UrlAnalyticsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>[]
+        }
+        upsert: {
+          args: Prisma.UrlAnalyticsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlAnalyticsPayload>
+        }
+        aggregate: {
+          args: Prisma.UrlAnalyticsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUrlAnalytics>
+        }
+        groupBy: {
+          args: Prisma.UrlAnalyticsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UrlAnalyticsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UrlAnalyticsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UrlAnalyticsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -527,6 +602,23 @@ export const UrlScalarFieldEnum = {
 export type UrlScalarFieldEnum = (typeof UrlScalarFieldEnum)[keyof typeof UrlScalarFieldEnum]
 
 
+export const UrlAnalyticsScalarFieldEnum = {
+  id: 'id',
+  url_id: 'url_id',
+  ip_address: 'ip_address',
+  user_agent: 'user_agent',
+  referer: 'referer',
+  country: 'country',
+  city: 'city',
+  device_type: 'device_type',
+  browser: 'browser',
+  os: 'os',
+  clicked_at: 'clicked_at'
+} as const
+
+export type UrlAnalyticsScalarFieldEnum = (typeof UrlAnalyticsScalarFieldEnum)[keyof typeof UrlAnalyticsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -541,6 +633,14 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -714,6 +814,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   url?: Prisma.UrlOmit
+  urlAnalytics?: Prisma.UrlAnalyticsOmit
 }
 
 /* Types for Logging */

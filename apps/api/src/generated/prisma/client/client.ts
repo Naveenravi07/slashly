@@ -44,3 +44,8 @@ export { Prisma }
  * 
  */
 export type Url = Prisma.UrlModel
+/**
+ * Model UrlAnalytics
+ * 
+ */
+export type UrlAnalytics = Prisma.UrlAnalyticsModel

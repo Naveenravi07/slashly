@@ -12,4 +12,30 @@ model Url {
   slug        String   @unique
   original_url String
   created_at  DateTime @default(now())
+  analytics   UrlAnalytics[]
+}
+
+model UrlAnalytics {
+  id          BigInt   @id @default(autoincrement())
+  url_id      BigInt
+  url         Url      @relation(fields: [url_id], references: [id], onDelete: Cascade)
+  
+  // Request metadata
+  ip_address  String?
+  user_agent  String?
+  referer     String?
+  
+  // Parsed data
+  country     String?
+  city        String?
+  device_type String?  // mobile, tablet, desktop
+  browser     String?
+  os          String?
+  
+  clicked_at  DateTime @default(now())
+  
+  @@index([url_id])
+  @@index([clicked_at])
+  @@index([country])
+  @@index([device_type])
 }

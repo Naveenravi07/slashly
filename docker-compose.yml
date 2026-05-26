@@ -57,11 +57,14 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slashly
       DATABASE_READ_REPLICA_URL: postgresql://postgres:postgres@postgres-replica:5432/slashly
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       NODE_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
       postgres-replica:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     restart: unless-stopped
     deploy:
@@ -95,7 +98,7 @@ services:
     image: grafana/grafana:latest
     container_name: slashly-grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -107,8 +110,58 @@ services:
       - prometheus
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: slashly-web
+    ports:
+      - "3000:3000"
+    environment:
+      API_BASE_URL: http://localhost:8080
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: slashly-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  analytics-worker:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slashly
+      DATABASE_READ_REPLICA_URL: postgresql://postgres:postgres@postgres-replica:5432/slashly
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      NODE_ENV: production
+      WORKER_MODE: analytics
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    command: node dist/worker.js
+
 volumes:
   postgres_data:
   postgres_replica_data:
   prometheus_data:
   grafana_data:
+  rabbitmq_data:
