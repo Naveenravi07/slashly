@@ -14,16 +14,31 @@ scrape_configs:
 
   # Monitor our API instances
   - job_name: 'slashly-api'
-    # Docker DNS will resolve 'api' to all replicas
+    # Docker DNS will resolve 'api' to all replicas in docker-compose
+    # and 'tasks.api' in Docker Swarm
     dns_sd_configs:
       - names:
-          - 'tasks.api'  # Docker Swarm service discovery
+          - 'api'
+          - 'tasks.api'
         type: 'A'
         port: 8080
-    # Fallback to static config for docker-compose
-    static_configs:
-      - targets: ['api:8080']
     metrics_path: '/metrics'  # Where our API exposes metrics
+    scrape_interval: 10s
+
+  # Monitor our Worker instances
+  - job_name: 'slashly-worker'
+    static_configs:
+      - targets: ['analytics-worker:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Monitor RabbitMQ
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+    metrics_path: '/metrics/detailed'
+    params:
+      family: ['queue_coarse_metrics']
     scrape_interval: 10s
 
   # Monitor Nginx

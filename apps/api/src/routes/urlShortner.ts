@@ -80,24 +80,50 @@ const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
   }, async (request, reply) => {
     const { url } = request.body;
 
-    const urlRecord = await server.prisma.url.create({
-      data: {
-        original_url: url,
-        slug: '',
-      },
+    // Use a transaction to ensure atomicity
+    const result = await server.prisma.$transaction(async (tx) => {
+      // Check if URL already exists with a valid slug
+      const existingUrl = await tx.url.findFirst({
+        where: { 
+          original_url: url,
+          slug: { not: { startsWith: 'temp_' } }
+        },
+      });
+
+      if (existingUrl) {
+        return existingUrl;
+      }
+
+      // Create URL with a temporary unique slug
+      const tempSlug = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const urlRecord = await tx.url.create({
+        data: {
+          original_url: url,
+          slug: tempSlug,
+        },
+      });
+
+      const slug = encodeBase62(urlRecord.id);
+      
+      // Update with the final slug
+      const updatedUrl = await tx.url.update({
+        where: { id: urlRecord.id },
+        data: { slug },
+      });
+
+      return updatedUrl;
     });
 
-    const slug = encodeBase62(urlRecord.id);
-    
-    await server.prisma.url.update({
-      where: { id: urlRecord.id },
-      data: { slug },
-    });
+    // Track URL creation metric (only if it's a new URL)
+    if (!result.slug.startsWith('temp_')) {
+      server.metrics.urlsCreatedTotal.inc();
+    }
 
-    // Track URL creation metric
-    server.metrics.urlsCreatedTotal.inc()
-
-    return { slug, short_url: `${process.env.SERVER_URL || 'http://localhost:8080'}/s/${slug}` };
+    return { 
+      slug: result.slug, 
+      short_url: `${process.env.SERVER_URL || 'http://localhost:8080'}/s/${result.slug}` 
+    };
   });
 
   server.get<{ Params: SlugParams }>('/s/:slug', {
@@ -119,11 +145,16 @@ const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
     });
 
     if (!urlRecord) {
+      server.metrics.urlNotFoundTotal.inc();
       return reply.code(404).send({ error: 'URL not found' });
     }
 
     // Track redirect metric
     server.metrics.urlRedirectsTotal.inc()
+
+    // Increment published metric BEFORE publishing
+    // This ensures published >= processed (no race condition)
+    server.metrics.analyticsEventsPublished.inc();
 
     // Publish analytics event to queue (non-blocking)
     const ipAddress = (Array.isArray(request.headers['x-forwarded-for']) 
@@ -151,6 +182,7 @@ const urlShortenerRoutes: FastifyPluginAsync = async (server) => {
       referer,
     }).catch(err => {
       console.error('Failed to publish analytics event:', err);
+      server.metrics.errorTotal.inc({ type: 'analytics_publish', route: '/s/:slug' });
     });
 
     return reply.redirect(urlRecord.original_url, 301);

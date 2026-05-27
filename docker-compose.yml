@@ -129,13 +129,14 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ["CMD-SHELL", "rabbitmq-plugins enable rabbitmq_prometheus && rabbitmq-diagnostics -q ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -145,6 +146,8 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slashly
       DATABASE_READ_REPLICA_URL: postgresql://postgres:postgres@postgres-replica:5432/slashly
